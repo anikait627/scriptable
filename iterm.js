@@ -8,18 +8,13 @@ const user = "anikait";
 // API PARAMETERS !important
 // WEATHER_API_KEY, you need an Open Weather API Key
 // You can get one for free at: https://home.openweathermap.org/api_keys (account needed).
-const WEATHER_API_KEY = "";
-const DEFAULT_LOCATION = {
-  latitude: 0,
-  longitude: 0
-};
+const WEATHER_API_KEY = "1be4d7dff9cc190025c919ff376c61e2";
 const WORK_CALENDAR_NAME = 'Personal';
 const PERSONAL_CALENDAR_NAME = 'School';
-const UPCOMING_SAT_PASS_URL = "https://in-the-sky.org/satpasses.php";
 
 const Cache = importModule('cache');
 
-const cache = new Cache("termiWidgetCache");
+const cache = new Cache("itermwidget");
 const data = await fetchData();
 const widget = createWidget(data);
 Script.setWidget(widget);
@@ -48,22 +43,32 @@ function createWidget(data) {
   dfTime.useMediumDateStyle()
   dfTime.useNoTimeStyle()
 
+  // Line 0 - Last Login
+  const timeFormatter = new DateFormatter();
+  timeFormatter.locale = "en";
+  timeFormatter.useNoDateStyle();
+  timeFormatter.useShortTimeStyle();
+
+  const lastLoginLine = leftStack.addText(`Last login: ${timeFormatter.string(new Date())}`);
+  lastLoginLine.textColor = Color.white();
+  lastLoginLine.textOpacity = 0.7;
+  lastLoginLine.font = new Font("Menlo", 11);
+
   const firstLine = leftStack.addText(`[] ${user} ~$ now`)
   firstLine.textColor = Color.white()
-  firstLine.textOpacity = 0.7
   firstLine.font = new Font("Menlo", 11)
   
-  const timeLine = leftStack.addText(`[🗓] ${dfTime.string(time)}`)
-  timeLine.textColor = Color.white()
+  const timeLine = leftStack.addText(`[📆] ${dfTime.string(time)}`)
+  timeLine.textColor = new Color("#5BD2F0")
   timeLine.font = new Font("Menlo", 11)
 
-  const nextPersonalCalendarEventLine = stack.addText(`🗓 | ${getCalendarEventTitle(data.nextPersonalEvent, false)}`);
-  nextPersonalCalendarEventLine.textColor = new Color(COLORS.personalCalendar);
-  nextPersonalCalendarEventLine.font = new Font(FONT_NAME, FONT_SIZE);
+  const nextPersonalCalendarEventLine = leftStack.addText(`[🗓] ${getCalendarEventTitle(data.nextPersonalEvent, false)}`);
+  nextPersonalCalendarEventLine.textColor = new Color("#ffa7d3");
+  nextPersonalCalendarEventLine.font = new Font("Menlo", 11);
 
-  const nextWorkCalendarEventLine = stack.addText(`🗓 | ${getCalendarEventTitle(data.nextWorkEvent, true)}`);
-  nextWorkCalendarEventLine.textColor = new Color(COLORS.workCalendar);
-  nextWorkCalendarEventLine.font = new Font(FONT_NAME, FONT_SIZE);
+  const nextWorkCalendarEventLine = leftStack.addText(`[🗓] ${getCalendarEventTitle(data.nextWorkEvent, true)}`);
+  nextWorkCalendarEventLine.textColor = new Color("#FF6663");
+  nextWorkCalendarEventLine.font = new Font("Menlo", 11);
   
   const batteryLine = leftStack.addText(`[🔋] ${renderBattery()}`)
   batteryLine.textColor = new Color("#6ef2ae")
@@ -72,10 +77,6 @@ function createWidget(data) {
   const locationLine = leftStack.addText(`[️️📍] Location: ${data.weather.location}`)
   locationLine.textColor = new Color("#7dbbae")
   locationLine.font = new Font("Menlo", 11)
-  
-  const satLine = leftStack.addText(`[🛰] ${data.satPass}`);
-  satLine.textColor = new Color("#ffcc66")
-  satLine.font = new Font("Menlo", 11)
 
   stack.addSpacer();
   const rightStack = stack.addStack();
@@ -106,13 +107,11 @@ async function fetchData() {
   const weather = await fetchWeather();
   const nextWorkEvent = await fetchNextCalendarEvent(WORK_CALENDAR_NAME);
   const nextPersonalEvent = await fetchNextCalendarEvent(PERSONAL_CALENDAR_NAME);
-  const satPass = await fetchNextSatPass();
   
   return {
     weather,
     nextWorkEvent,
     nextPersonalEvent,
-    satPass,
   }
 }
 
@@ -149,31 +148,6 @@ async function fetchWeather() {
     wind: Math.round(data.current.wind_speed),
     high: Math.round(data.daily[0].temp.max),
     low: Math.round(data.daily[0].temp.min),
-  }
-}
-
-
-async function fetchNextSatPass() {  
-  const passes = await fetchJson('upcoming-passes.json', UPCOMING_SAT_PASS_URL);
-  const now = new Date();
-  const nextPass = passes
-    .filter((p) => now.getTime() < p.end)[0];
-
-  if (!nextPass) {
-    return 'No more passes today';
-  }
-
-  if (nextPass.start > now.getTime()) {
-    const minutes = Math.round(((nextPass.start - now.getTime()) / 1000) / 60);
-    const hours = Math.round((((nextPass.start - now.getTime()) / 1000) / 60) / 60);
-    
-    if (minutes > 59) {
-      return `${nextPass.satellite} in ${hours}h, ${Math.round(nextPass.elevation)}°`;
-    } else {
-      return `${nextPass.satellite} in ${minutes}m, ${Math.round(nextPass.elevation)}°`;
-    }
-  } else {
-    return `${nextPass.satellite} for ${Math.round(((nextPass.end - now.getTime()) / 1000) / 60)}m, ${Math.round(nextPass.elevation)}°`;
   }
 }
 
@@ -218,7 +192,7 @@ async function fetchNextCalendarEvent(calendarName) {
 
 function getCalendarEventTitle(calendarEvent, isWorkEvent) {
   if (!calendarEvent) {
-    return `No upcoming ${isWorkEvent ? 'work ' : ''}events`;
+    return `No ${isWorkEvent ? 'work ' : 'personal '}events`;
   }
 
   const timeFormatter = new DateFormatter();
