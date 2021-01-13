@@ -8,7 +8,7 @@ const user = "anikait";
 // API PARAMETERS !important
 // WEATHER_API_KEY, you need an Open Weather API Key
 // You can get one for free at: https://home.openweathermap.org/api_keys (account needed).
-const WEATHER_API_KEY = "1be4d7dff9cc190025c919ff376c61e2";
+const WEATHER_API_KEY = "";
 const WORK_CALENDAR_NAME = 'Personal';
 const PERSONAL_CALENDAR_NAME = 'School';
 
@@ -54,7 +54,7 @@ function createWidget(data) {
   lastLoginLine.textOpacity = 0.7;
   lastLoginLine.font = new Font("Menlo", 11);
 
-  const firstLine = leftStack.addText(`[] ${user} ~$ now`)
+  const firstLine = leftStack.addText(`[👨🏾‍💻] ${user} ~$ now`)
   firstLine.textColor = Color.white()
   firstLine.font = new Font("Menlo", 11)
   
